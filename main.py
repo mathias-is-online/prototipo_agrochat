@@ -1,3 +1,8 @@
+#MATHIAS ALFREDO BAMBAREN MEDINA 71335785
+#PARA CORRER EL PROTOTIPO DEBES llamar con la consola de python
+#esto ejecutara el servidor web que recibira las solicitudes http para fastapi
+#python -m uvicorn main:app --reload 
+
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 from openai import OpenAI
@@ -7,7 +12,6 @@ client = OpenAI(api_key=api_key)
 
 app = FastAPI()
 
-
 #en system le dicen a la IA QUE COSA ES osea como se comporta y así
 #en user se le dice cómo el usuario le preguntara
 messages = [
@@ -15,12 +19,13 @@ messages = [
     {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
 ]
 
+#Este es mi endpoint inicial recibe solicitudes get y muestra una ventana de mensajes
 @app.get("/", response_class=HTMLResponse)
 async def formulario():
     return """
     <html>
         <head>
-            <title>Chatbot con OpenAI</title>
+            <title>Chatbot Prototipo con OpenAI</title>
         </head>
         <body>
             <h2>Chatbot de Plagas</h2>
@@ -37,23 +42,25 @@ async def formulario():
     </html>
     """.format("".join(f"<li>{m['role']}: {m['content']}</li>" for m in messages))
 
-# Ruta para procesar el mensaje del formulario
+
+#el form de arriba se define como metodo post y lo manda al endpoint procesar
+#esto se manda como objeto con nombre mensaje a este endpoint
 @app.post("/procesar", response_class=HTMLResponse)
 async def procesar(mensaje: str = Form(...)):
-    # Agregar el mensaje del usuario al historial
+    #se agrega al historial
     messages.append({"role": "user", "content": mensaje})
 
-    # Enviar la solicitud a OpenAI para obtener una respuesta
+    #aqui ocurre la magia, se manda a openai para generar respuesta que luego se guarda en competion
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=messages
     )
 
-    # Obtener la respuesta del asistente y agregarla al historial
+    #esa rpta se castea para que se guarde en esa nueva variable la rpta en texto
     assistant_response = completion.choices[0].message.content
     messages.append({"role": "assistant", "content": assistant_response})
 
-    # Mostrar el historial de mensajes en la misma página
+    #historial de mdjs
     return """
     <html>
         <head>
